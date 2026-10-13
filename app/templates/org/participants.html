@@ -1,0 +1,51 @@
+{% extends "org/event_layout.html" %}
+{% block event_content %}
+<section class="card">
+  <div class="row row-between"><h2>Участники</h2>
+    <span class="muted small">{{ people|length }}{% if event.seats %} из {{ event.seats }} мест{% endif %}</span></div>
+  {% if locked %}<p class="note" style="margin-top:12px">Оценки уже переданы в Народный рейтинг, поэтому состав
+    валидных участников зафиксирован.</p>{% endif %}
+  {% if people %}
+  <div class="table-wrap" style="margin-top:12px"><table>
+    <thead><tr><th>Гость</th><th>Вошёл</th><th>Оценил</th><th>В итогах</th><th></th></tr></thead>
+    <tbody>
+      {% for p in people %}
+      <tr>
+        <td><b>{{ p.name }}</b></td>
+        <td class="nowrap muted small">{{ p.joined_at|dt('%H:%M') }}</td>
+        <td class="nowrap">{{ p.ballots }} из {{ total_wines }}</td>
+        <td>
+          {% if p.reason == 'duplicate_device' %}
+            <span class="badge warn">на проверке</span>
+            <div class="small muted">то же устройство, что у гостя «{{ names.get(p.duplicate_of, '?') }}»</div>
+          {% elif p.reason %}
+            <span class="badge bad">не учитывается</span><div class="small muted">{{ reasons[p.reason] }}</div>
+          {% else %}
+            <span class="badge ok">учитывается</span>
+          {% endif %}
+        </td>
+        <td class="right">
+          {% if not locked %}
+          <form method="post" action="{{ base }}/participants/{{ p.id }}" class="row" style="justify-content:flex-end">
+            {% if p.duplicate_of and not p.excluded %}<button class="btn btn-sm" name="action" value="confirm">Это другой человек</button>{% endif %}
+            {% if p.excluded %}<button class="btn btn-sm" name="action" value="restore">Вернуть</button>
+            {% else %}<button class="btn btn-sm btn-danger" name="action" value="exclude">Исключить</button>{% endif %}
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="empty">Пока никто не вошёл. <a href="{{ base }}/invite">Покажите гостям QR-код</a>.</p>
+  {% endif %}
+</section>
+<section class="card card-flat stack-sm" style="margin-top:20px">
+  <h3>Какие оценки считаются валидными</h3>
+  <p class="small">В итоги и в Народный рейтинг идут оценки гостей, которые подтвердили возраст, не исключены вами,
+    не отмечены как повторный вход и заполнили все критерии.</p>
+  <p class="small muted">Автоматически отсеиваются гости, поставившие всем винам одинаковые крайние оценки
+    (от четырёх вин). Имена гостей видите только вы: в рейтинг уходит обезличенный идентификатор.</p>
+</section>
+{% endblock %}

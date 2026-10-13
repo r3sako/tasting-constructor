@@ -1,0 +1,112 @@
+{% extends "org/event_layout.html" %}
+{% import "_macros.html" as m %}
+{% block event_content %}
+{% set draft = event.status == 'draft' %}
+<div class="split">
+  <section class="card">
+    <div class="row row-between">
+      <h2>Программа</h2>
+      <span class="muted small">{{ n_wines }} из {{ max_wines }}</span>
+    </div>
+    {% if program %}
+    <form method="post" action="{{ base }}/program" style="margin-top:16px">
+      <datalist id="flights">{% for f in program|map(attribute='flight')|select|unique %}<option value="{{ f }}">{% endfor %}</datalist>
+      <ul class="list">
+        {% for w in program %}
+        <li class="program-row">
+          <div class="num">{{ w.position }}</div>
+          <div class="wine">{{ m.thumb(w) }}<div class="grow">{{ m.wine_line(w) }}</div></div>
+          <div class="moves">
+            {% if draft %}
+            <button class="btn btn-icon" name="action" value="up:{{ w.id }}" title="Выше" {{ 'disabled' if loop.first }}>↑</button>
+            <button class="btn btn-icon" name="action" value="down:{{ w.id }}" title="Ниже" {{ 'disabled' if loop.last }}>↓</button>
+            <button class="btn btn-icon btn-danger" name="action" value="remove:{{ w.id }}" title="Убрать из программы">✕</button>
+            {% endif %}
+          </div>
+          <div class="extra">
+            <input type="text" name="flight_{{ w.id }}" value="{{ w.flight or '' }}" list="flights" maxlength="60"
+                   placeholder="Сет" aria-label="Сет">
+            <input type="text" name="comment_{{ w.id }}" value="{{ w.comment or '' }}" maxlength="300"
+                   placeholder="Комментарий ведущего" aria-label="Комментарий ведущего">
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="row" style="margin-top:16px">
+        <button class="btn btn-primary" name="action" value="save">Сохранить программу</button>
+        {% if draft and program|length > 1 %}
+        <button class="btn" name="action" value="shuffle" title="Случайный порядок образцов">Перемешать порядок</button>
+        {% endif %}
+      </div>
+    </form>
+    {% if event.mode == 'blind' %}
+    <p class="note info" style="margin-top:16px">Гости увидят только «Образец 1», «Образец 2»… Комментарий ведущего
+      откроется вместе с бутылкой.</p>
+    {% endif %}
+    {% else %}
+    <div class="empty">Пока пусто. Найдите вина в каталоге{{ ' справа' if draft }} и добавьте их в программу.</div>
+    {% endif %}
+    {% if not draft %}<p class="note" style="margin-top:16px">Голосование уже началось: состав и порядок вин зафиксированы.
+      Сеты и комментарии можно править.</p>{% endif %}
+  </section>
+
+  {% if draft %}
+  <section class="card" id="catalog">
+    <h2>Каталог «Своё Вино»</h2>
+    <form method="get" class="filters" style="margin-top:14px">
+      <input class="wide" type="text" name="q" value="{{ params.q }}" placeholder="Название или производитель" aria-label="Поиск">
+      <select name="color" aria-label="Цвет"><option value="">Любой цвет</option>
+        {% for v in options.colors %}<option {{ 'selected' if params.color == v }}>{{ v }}</option>{% endfor %}</select>
+      <select name="sweetness" aria-label="Сахар"><option value="">Любой сахар</option>
+        {% for v in options.sweetness %}<option {{ 'selected' if params.sweetness == v }}>{{ v }}</option>{% endfor %}</select>
+      <select name="region" aria-label="Регион"><option value="">Любой регион</option>
+        {% for v in options.regions %}<option {{ 'selected' if params.region == v }}>{{ v }}</option>{% endfor %}</select>
+      <select name="grape" aria-label="Сорт"><option value="">Любой сорт</option>
+        {% for v in options.grapes %}<option {{ 'selected' if params.grape == v }}>{{ v }}</option>{% endfor %}</select>
+      <label class="check wide"><input type="checkbox" name="rated" value="1" {{ 'checked' if params.rated }}>
+        <span>Только с оценкой в Народном рейтинге</span></label>
+      <div class="row wide"><button class="btn btn-primary">Найти</button>
+        <a class="btn btn-ghost" href="{{ base }}/wines">Сбросить</a>
+        <span class="muted small">Найдено: {{ total }}</span></div>
+    </form>
+
+    {% if found %}
+    <form method="post" action="{{ base }}/wines/add-top" class="row" style="margin-top:14px">
+      <input type="hidden" name="query" value="{{ query }}">
+      <input type="hidden" name="count" value="6">
+      <button class="btn btn-sm">Добавить 6 лучших по Народному рейтингу</button>
+      <span class="muted small">из найденных</span>
+    </form>
+    <ul class="list" style="margin-top:14px">
+      {% for w in found %}
+      <li class="wine">
+        {{ m.thumb(w) }}
+        <div class="grow">{{ m.wine_line(w) }}
+          <div class="sub">{{ w.grapes }}</div></div>
+        {% if w.public_rating %}<span class="rating" title="Народный рейтинг">★ {{ w.public_rating|score }}</span>{% endif %}
+        {% if w.slug in chosen %}
+          <span class="badge ok">В программе</span>
+        {% else %}
+          <form method="post" action="{{ base }}/wines/add">
+            <input type="hidden" name="slug" value="{{ w.slug }}"><input type="hidden" name="query" value="{{ query }}">
+            <button class="btn btn-sm" aria-label="Добавить {{ w.title }}">Добавить</button>
+          </form>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% if pages > 1 %}
+    {% set qs %}{% for k, v in params.items() if v %}{{ k }}={{ v|urlencode }}&{% endfor %}{% endset %}
+    <div class="pager">
+      {% if page > 1 %}<a class="btn btn-sm" href="?{{ qs }}page={{ page - 1 }}#catalog">← Назад</a>{% endif %}
+      <span class="muted small">Страница {{ page }} из {{ pages }}</span>
+      {% if page < pages %}<a class="btn btn-sm" href="?{{ qs }}page={{ page + 1 }}#catalog">Дальше →</a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty">Ничего не нашлось. Попробуйте убрать часть фильтров.</div>
+    {% endif %}
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

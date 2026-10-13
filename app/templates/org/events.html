@@ -1,0 +1,29 @@
+{% extends "org/layout.html" %}
+{% block title %}Мои дегустации{% endblock %}
+{% block content %}
+<div class="row row-between" style="margin-bottom:20px">
+  <h1>Мои дегустации</h1>
+  <a class="btn btn-primary" href="/org/events/new">Новая дегустация</a>
+</div>
+{% if events %}
+<div class="grid-2">
+  {% for e in events %}
+  <a class="card" href="/org/events/{{ e.id }}" style="text-decoration:none;color:inherit">
+    <div class="row"><span class="badge {{ e.status }}">{{ STATUS[e.status] }}</span>
+      <span class="badge">{{ MODE[e.mode] }}</span></div>
+    <h2 style="margin-top:10px">{{ e.title }}</h2>
+    <p class="muted small" style="margin-top:4px">
+      {% if e.starts_at %}{{ e.starts_at|dt }}{% endif %}{% if e.place %} · {{ e.place }}{% endif %}</p>
+    <p class="small" style="margin-top:12px">{{ e.n_wines }} {{ plural(e.n_wines, 'вино', 'вина', 'вин') }} ·
+      {{ e.n_people }} {{ plural(e.n_people, 'участник', 'участника', 'участников') }}</p>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card empty stack">
+  <h2>Пока нет ни одной дегустации</h2>
+  <p>Создайте первую: это займёт пару минут.</p>
+  <p><a class="btn btn-primary" href="/org/events/new">Создать дегустацию</a></p>
+</div>
+{% endif %}
+{% endblock %}

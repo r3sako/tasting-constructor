@@ -1,0 +1,67 @@
+{% extends "org/event_layout.html" %}
+{% block event_content %}
+{% set draft = event.status == 'draft' %}
+<div class="stack">
+  {% if draft %}
+  <section>
+    <h2 style="margin-bottom:12px">Шаблоны</h2>
+    <div class="grid-3">
+      {% for key, preset in presets.items() %}
+      <form class="card card-flat stack-sm" method="post" action="{{ base }}/scales/preset">
+        <h3>{{ preset.title }}</h3>
+        <p class="muted small">{{ preset.about }}</p>
+        <p class="small">{% for c in preset.criteria %}{{ c[0] }} {{ c[2] }}–{{ c[3] }}{{ ', ' if not loop.last }}{% endfor %}</p>
+        <input type="hidden" name="key" value="{{ key }}">
+        <button class="btn btn-sm">Применить</button>
+      </form>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <h2>Критерии оценки</h2>
+    <p class="muted small">Гость ставит целое число по каждому критерию. Чтобы убрать критерий, очистите его название.</p>
+    <form method="post" action="{{ base }}/scales" style="margin-top:14px">
+      <div class="table-wrap"><table>
+        <thead><tr><th style="width:24%">Критерий</th><th>Подсказка гостю</th><th style="width:90px">От</th>
+          <th style="width:90px">До</th><th style="width:90px">Вес</th></tr></thead>
+        <tbody id="criteria-body">
+          {% for c in criteria %}
+          <tr>
+            <td><input type="text" name="name" value="{{ c.name }}" maxlength="40" aria-label="Критерий" {{ 'disabled' if not draft }}></td>
+            <td><input type="text" name="hint" value="{{ c.hint or '' }}" maxlength="120" aria-label="Подсказка" {{ 'disabled' if not draft }}></td>
+            <td><input type="number" name="min" value="{{ c.min_value }}" min="0" max="99" aria-label="Минимум" {{ 'disabled' if not draft }}></td>
+            <td><input type="number" name="max" value="{{ c.max_value }}" min="1" max="100" aria-label="Максимум" {{ 'disabled' if not draft }}></td>
+            <td><input type="text" name="weight" value="{{ c.weight|num }}" inputmode="decimal" aria-label="Вес" {{ 'disabled' if not draft }}></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table></div>
+      <template id="criterion-row"><tr>
+        <td><input type="text" name="name" maxlength="40" placeholder="Новый критерий" aria-label="Критерий"></td>
+        <td><input type="text" name="hint" maxlength="120" aria-label="Подсказка"></td>
+        <td><input type="number" name="min" value="1" min="0" max="99" aria-label="Минимум"></td>
+        <td><input type="number" name="max" value="10" min="1" max="100" aria-label="Максимум"></td>
+        <td><input type="text" name="weight" value="1" inputmode="decimal" aria-label="Вес"></td>
+      </tr></template>
+      {% if draft %}
+      <div class="row" style="margin-top:14px">
+        <button class="btn btn-primary">Сохранить шкалы</button>
+        <button class="btn" type="button" data-add-criterion>Добавить критерий</button>
+      </div>
+      {% else %}
+      <p class="note" style="margin-top:14px">Шкалы зафиксированы с началом голосования.</p>
+      {% endif %}
+    </form>
+  </section>
+
+  <section class="card card-flat stack-sm">
+    <h3>Как считается итоговая оценка</h3>
+    <p class="small">Каждый критерий переводится в долю от своего диапазона, доли усредняются с учётом весов,
+      результат приводится к шкале 1–5 — той же, что у Народного винного рейтинга.</p>
+    <p class="small muted">Все критерии на минимуме дают 1,00, на максимуме — 5,00, на середине — 3,00.
+      Оценка, где заполнены не все критерии, в итоги и в рейтинг не попадает.</p>
+  </section>
+</div>
+{% endblock %}

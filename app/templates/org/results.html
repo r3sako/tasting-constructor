@@ -1,0 +1,108 @@
+{% extends "org/event_layout.html" %}
+{% import "_macros.html" as m %}
+{% block event_content %}
+{% set finished = event.status in ('closed', 'published') %}
+{% set hidden = rows|selectattr('wine.revealed_at', 'none')|list|length %}
+<div class="stack">
+  {% if event.status == 'draft' %}
+    <p class="note">Итоги появятся, когда начнётся голосование.</p>
+  {% elif event.status == 'voting' %}
+    <p class="note">Голосование ещё идёт — это промежуточные цифры. Гостям они не видны.</p>
+  {% endif %}
+
+  <div class="stats">
+    <div class="stat"><b>{{ voters }}</b><span>{{ plural(voters, 'гость', 'гостя', 'гостей') }} с валидными оценками</span></div>
+    <div class="stat"><b>{{ counts.valid }}</b><span>валидных оценок</span></div>
+    <div class="stat"><b>{{ counts.values()|sum - counts.valid }}</b><span>не учтено</span></div>
+  </div>
+  {% if counts.values()|sum - counts.valid %}
+  <p class="small muted">Не учтено:
+    {% for key, text in reasons.items() if counts[key] %}{{ text }} — {{ counts[key] }}{{ '; ' if not loop.last }}{% endfor %}.
+    <a href="{{ base }}/participants">Участники</a></p>
+  {% endif %}
+
+  {% if event.mode == 'blind' and event.status == 'closed' and hidden %}
+  <section class="card row row-between">
+    <div><h2>Раскрытие бутылок</h2><p class="muted small">Осталось раскрыть: {{ hidden }}. Гости видят вино на телефоне сразу после раскрытия.</p></div>
+    <form method="post" action="{{ base }}/reveal" class="row">
+      <button class="btn btn-primary" name="target" value="next">Раскрыть следующий</button>
+      <button class="btn" name="target" value="all" data-confirm="Раскрыть все бутылки сразу?">Раскрыть все</button>
+      <a class="btn btn-ghost" href="{{ base }}/screen" target="_blank">На экране</a>
+    </form>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <div class="row row-between"><h2>Рейтинг дегустации</h2>
+      <div class="row"><a class="btn btn-sm" href="{{ base }}/export.csv">Скачать CSV</a>
+        {% if event.status == 'closed' %}
+        <form method="post" action="{{ base }}/status"><button class="btn btn-sm btn-primary" name="action" value="publish"
+          {% if event.mode == 'blind' and hidden %}data-confirm="Нераскрытые бутылки откроются сразу. Опубликовать?"{% endif %}>Опубликовать итоги</button></form>
+        {% elif event.status == 'published' %}
+        <a class="btn btn-sm btn-primary" href="{{ results_url }}" target="_blank">Страница итогов</a>
+        {% endif %}</div></div>
+    {% if rows %}
+    <ul class="list" style="margin-top:16px">
+      {% for r in rows %}
+      <li>
+        <div class="result">
+          {{ m.place(r.place) }}
+          <div>
+            <div class="wine">{{ m.thumb(r.wine) }}<div class="grow">{{ m.wine_line(r.wine) }}
+              <div class="sub">Образец {{ r.wine.position }}{% if r.wine.flight %} · {{ r.wine.flight }}{% endif %}
+                {% if event.mode == 'blind' %} · {% if r.wine.revealed_at %}раскрыт{% else %}<span class="badge warn">скрыт от гостей</span>{% endif %}{% endif %}</div></div></div>
+            {% if r.score is not none %}<div class="bar"><i style="width:{{ ((r.score - 1) / 4 * 100)|round|int }}%"></i></div>{% endif %}
+            {% if criteria|length > 1 and r.votes %}
+            <div class="crit">{% for c in criteria %}<span>{{ c.name }} <b>{{ r.criteria[c.id]|score(1) }}</b> из {{ c.max_value }}</span>{% endfor %}</div>
+            {% endif %}
+            <div class="crit">
+              {% if r.wine.public_rating and r.score is not none %}
+              {% set delta = r.score - r.wine.public_rating %}
+              <span>Народный рейтинг платформы <b>{{ r.wine.public_rating|score }}</b>
+                ({{ '+' if delta > 0 }}{{ delta|score }})</span>
+              {% endif %}
+              {% if r.spread is not none %}<span>разброс <b>{{ r.spread|score }}</b></span>{% endif %}
+              {% if event.mode == 'blind' and event.status == 'closed' and not r.wine.revealed_at %}
+              <form method="post" action="{{ base }}/reveal"><button class="btn btn-sm" name="target" value="{{ r.wine.id }}">Раскрыть</button></form>
+              {% endif %}
+            </div>
+            {% if r.notes %}
+            <details style="margin-top:6px"><summary>Заметки гостей: {{ r.notes|length }}</summary>
+              <ul>{% for n in r.notes %}<li>{{ n }}</li>{% endfor %}</ul></details>
+            {% endif %}
+          </div>
+          <div class="score">{{ r.score|score }}<small>{{ r.votes }} {{ plural(r.votes, 'оценка', 'оценки', 'оценок') }}</small></div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">В программе пока нет вин.</p>
+    {% endif %}
+  </section>
+
+  <section class="card stack">
+    <div><h2>Передача в Народный винный рейтинг</h2>
+      <p class="muted small">Уходят только валидные оценки, уже приведённые к шкале 1–5, с ключом карточки вина
+        в каталоге. Повторная передача не создаёт дублей: у каждой оценки постоянный идентификатор.</p></div>
+    <div class="row">
+      <form method="post" action="{{ base }}/transfer">
+        <button class="btn btn-primary" {{ 'disabled' if not finished or not counts.valid }}>Передать {{ counts.valid }} {{ plural(counts.valid, 'оценку', 'оценки', 'оценок') }}</button>
+      </form>
+      <a class="btn" href="{{ base }}/export.json" target="_blank">Посмотреть выгрузку (JSON)</a>
+      {% if not finished %}<span class="muted small">Доступно после закрытия голосования</span>{% endif %}
+    </div>
+    {% if transfers %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Когда</th><th>Отправлено</th><th>Принято</th><th>Уже было</th><th>Отклонено</th><th>Контрольная сумма</th></tr></thead>
+      <tbody>{% for t in transfers %}
+        <tr><td class="nowrap">{{ t.created_at|dt }}</td><td>{{ t.votes_sent }}</td><td>{{ t.accepted }}</td>
+          <td>{{ t.duplicates }}</td><td>{{ t.rejected }}</td><td><code class="small">{{ t.payload_sha256[:16] }}…</code></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% endif %}
+    <p class="small muted">В прототипе оценки принимает встроенная заглушка платформы: она проверяет подпись,
+      наличие вина в каталоге и диапазон оценки.</p>
+  </section>
+</div>
+{% endblock %}

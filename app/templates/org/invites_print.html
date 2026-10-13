@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Приглашения — {{ event.title }}{% endblock %}
+{% block body %}
+<main class="container">
+  <div class="row row-between no-print" style="margin-bottom:16px">
+    <h1>{{ event.title }}</h1>
+    <button class="btn btn-primary" onclick="print()">Печать</button>
+  </div>
+  <div class="print-grid">
+    {% for i in invites if not i.used %}
+    <div class="print-card">
+      <b>{{ event.title }}</b>
+      {{ i.qr|safe }}
+      <div class="small muted">{{ i.label }} · код приглашения</div>
+      <code>{{ i.code }}</code>
+    </div>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

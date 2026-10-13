@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Вход — Конструктор дегустаций{% endblock %}
+{% block body %}
+<header class="topbar"><div class="inner">{{ m.brand() }}</div></header>
+<main class="container"><div class="narrow stack">
+  {{ m.flashes(flashes) }}
+  <form class="card" method="post" action="/login">
+    <h1>Вход для организатора</h1>
+    <div class="field" style="margin-top:16px"><label for="email">Почта</label>
+      <input id="email" type="email" name="email" value="{{ email }}" autocomplete="username" required></div>
+    <div class="field"><label for="password">Пароль</label>
+      <input id="password" type="password" name="password" autocomplete="current-password" required></div>
+    <div class="field"><button class="btn btn-primary btn-block">Войти</button></div>
+  </form>
+  {% if demo %}
+  <form class="card card-flat" method="post" action="/login/demo">
+    <h3>Демо-кабинет</h3>
+    <p class="muted small" style="margin:4px 0 12px">Готовые дегустации с оценками — без регистрации.</p>
+    <button class="btn btn-block">Открыть демо-кабинет</button>
+  </form>
+  {% endif %}
+  <p class="muted small">Ещё нет кабинета? <a href="/register">Создать</a></p>
+</div></main>
+{% endblock %}

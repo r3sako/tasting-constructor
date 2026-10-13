@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ event.title }}{% endblock %}
+{% block body %}
+<header class="topbar"><div class="inner">{{ m.brand() }}</div></header>
+<main class="container"><div class="narrow card stack">
+  <h1>{{ event.title }}</h1>
+  <p>Итоги этой дегустации ещё не опубликованы. Загляните позже.</p>
+</div></main>
+{% endblock %}

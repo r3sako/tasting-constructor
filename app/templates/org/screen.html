@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Экран — {{ event.title }}{% endblock %}
+{% block body_class %}screen{% endblock %}
+{% block body %}
+{% set base = '/org/events/' ~ event.id %}
+<div class="scr" data-poll-url="{{ base }}/live.json" data-poll-version="{{ version }}" data-poll-every="3000">
+  <header class="row row-between">
+    <div><h1>{{ event.title }}</h1>
+      <div class="sub">{{ MODE[event.mode] }} дегустация · {{ STATUS[event.status]|lower }}</div></div>
+    <a class="btn btn-sm" href="{{ base }}">В кабинет</a>
+  </header>
+
+  {% if event.status in ('draft', 'voting') %}
+  <div class="scr-join">
+    <div class="qr">{{ qr|safe }}</div>
+    <div class="stack">
+      <div class="sub">Наведите камеру телефона на код</div>
+      <div class="scr-url">{{ join_url }}</div>
+      <div><div class="scr-big">{{ people }}</div>
+        <div class="sub">{{ plural(people, 'участник', 'участника', 'участников') }} в дегустации</div></div>
+      {% if event.status == 'draft' %}<div class="sub">Голосование ещё не открыто — можно входить заранее</div>{% endif %}
+    </div>
+  </div>
+  {% if event.status == 'voting' %}
+  <div class="scr-grid">
+    {% for w in wines %}
+    {% set n = progress.get(w.id, 0) %}
+    <div class="scr-card">
+      <div class="lbl">Образец {{ w.position }}</div>
+      {% if event.mode == 'open' %}<div class="nm" style="font-size:1.05rem;opacity:1">{{ w.title }}</div>{% endif %}
+      <div class="sub" style="margin-top:8px">{{ n }} из {{ people }}</div>
+      <div class="bar"><i style="width:{{ (n / people * 100)|round|int if people else 0 }}%"></i></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  {% if event.mode == 'blind' and event.status == 'closed' %}
+  <div class="scr-actions">
+    {% if hidden %}
+    <form method="post" action="{{ base }}/reveal"><input type="hidden" name="back" value="screen">
+      <button class="btn btn-primary" name="target" value="next">Раскрыть следующий образец</button></form>
+    <span class="sub">Осталось: {{ hidden }}. Идём от последнего места к первому.</span>
+    {% else %}
+    <form method="post" action="{{ base }}/status"><button class="btn btn-primary" name="action" value="publish">Опубликовать итоги</button></form>
+    <span class="sub">Все бутылки раскрыты</span>
+    {% endif %}
+  </div>
+  {% if latest %}
+  <div class="scr-latest">
+    {% if latest.wine.image %}<img src="{{ image(latest.wine.image) }}" alt="">{% endif %}
+    <div class="grow">
+      <div class="muted">Образец {{ latest.wine.position }} — {{ latest.place }} место</div>
+      <h1 style="margin:8px 0">{{ latest.wine.title }}</h1>
+      <div class="muted">{{ latest.wine.manufacturer }} · {{ latest.wine.category|lower }} · {{ latest.wine.region }}</div>
+    </div>
+    <div class="score" style="font-size:4rem">{{ latest.score|score }}<small>{{ latest.votes }} {{ plural(latest.votes, 'оценка', 'оценки', 'оценок') }}</small></div>
+  </div>
+  {% endif %}
+  {% endif %}
+  {# пока бутылки не раскрыты, карточки идут в порядке программы: порядок по местам выдал бы победителя #}
+  <div class="scr-grid">
+    {% for r in (rows|sort(attribute='wine.position') if event.status == 'closed' and event.mode == 'blind' else rows) %}
+    {% set shown = event.mode == 'open' or r.wine.revealed_at or event.status == 'published' %}
+    <div class="scr-card {{ 'open' if shown }}">
+      <div class="lbl">{% if shown and r.place %}{{ r.place }} место · {% endif %}Образец {{ r.wine.position }}</div>
+      {% if shown %}
+      <div class="nm">{{ r.wine.title }}</div>
+      <div class="small muted">{{ r.wine.manufacturer }}</div>
+      <div class="sc">{{ r.score|score }}</div>
+      {% else %}
+      <div class="nm">?</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

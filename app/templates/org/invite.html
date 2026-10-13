@@ -1,0 +1,51 @@
+{% extends "org/event_layout.html" %}
+{% block event_content %}
+<div class="grid-2">
+  <section class="card stack">
+    <h2>{{ 'Ссылка дегустации' if event.access == 'personal' else 'QR-код для гостей' }}</h2>
+    <div class="qr" style="max-width:300px">{{ qr|safe }}</div>
+    <div class="link-box"><input id="join-url" type="text" readonly value="{{ join_url }}">
+      <button class="btn" type="button" data-copy="#join-url">Скопировать</button></div>
+    {% if event.access == 'link' %}
+    <p class="small muted">Покажите код на экране или распечатайте. Гость вводит имя, подтверждает возраст
+      и сразу попадает в анкету.</p>
+    {% else %}
+    <p class="small muted">По общей ссылке гостю понадобится код из личного приглашения. Удобнее раздать
+      карточки с личными QR-кодами — они ведут сразу в анкету.</p>
+    {% endif %}
+    <div><a class="btn btn-primary" href="{{ base }}/screen" target="_blank">Открыть экран для проектора</a></div>
+  </section>
+
+  <section class="card stack">
+    {% if event.access == 'personal' %}
+    <div class="row row-between"><h2>Одноразовые приглашения</h2>
+      {% if invites %}<a class="btn btn-sm" href="{{ base }}/invites/print" target="_blank">Печать карточек</a>{% endif %}</div>
+    <form method="post" action="{{ base }}/invites" class="row">
+      <input type="number" name="count" value="{{ event.seats or 10 }}" min="1" max="100" style="width:110px" aria-label="Сколько приглашений">
+      <button class="btn">Создать приглашения</button>
+    </form>
+    {% if invites %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Приглашение</th><th>Код</th><th>Статус</th></tr></thead>
+      <tbody>{% for i in invites %}
+        <tr><td>{{ i.label }}</td><td><code>{{ i.code }}</code></td>
+          <td>{% if i.participant_id %}<span class="badge ok">использовано — {{ i.guest }}</span>{% else %}<span class="badge">свободно</span>{% endif %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}
+    <p class="empty">Приглашений пока нет. Создайте по одному на каждого гостя.</p>
+    {% endif %}
+    {% else %}
+    <h2>Защита от повторных голосов</h2>
+    <ul class="checklist">
+      <li class="done">Один гость — одна оценка каждого вина; повторная отправка только обновляет её.</li>
+      <li class="done">Гость возвращается в свою анкету, а не создаёт новую.</li>
+      <li class="done">Повторный вход с того же устройства отмечается, его оценки не идут в итог без вашего решения.</li>
+      <li class="done">Лимит мест{% if event.seats %}: {{ event.seats }}{% else %} — можно задать в параметрах{% endif %}.</li>
+    </ul>
+    <p class="note info">Нужна строгая защита — например, для открытого мероприятия? Переключите вход на
+      одноразовые приглашения в <a href="{{ base }}/edit">параметрах</a>{{ '' if event.status == 'draft' else ' (доступно только в черновике)' }}.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ event.title }}{% endblock %}
+{% block body_class %}guest{% endblock %}
+{% block body %}
+<header class="g-top"><div class="inner">
+  {% block back %}{% endblock %}
+  <div class="grow"><div class="t">{{ event.title }}</div>
+    <div class="s">{{ MODE[event.mode] }} дегустация{% if person %} · {{ person.name }}{% endif %}</div></div>
+</div></header>
+<main class="g-main">
+  {{ m.flashes(flashes) }}
+  {% block content %}{% endblock %}
+</main>
+{% endblock %}

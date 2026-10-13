@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ title }}{% endblock %}
+{% block body %}
+<header class="topbar"><div class="inner">{{ m.brand() }}</div></header>
+<main class="container"><div class="narrow card stack">
+  <h1>{{ title }}</h1>
+  {% if detail %}<p>{{ detail }}</p>{% endif %}
+  <p><a class="btn" href="/">На главную</a></p>
+</div></main>
+{% endblock %}

@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.DS_Store
+# рабочая база приложения и ключ подписи создаются при запуске
+data/app.sqlite*
+data/.secret_key
+# локальные настройки запуска и сырые страницы каталога (восстанавливаются scripts/fetch_catalog.py)
+.claude/
+data/raw/

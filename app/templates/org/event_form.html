@@ -1,0 +1,44 @@
+{% extends "org/layout.html" %}
+{% block title %}{{ 'Параметры' if event else 'Новая дегустация' }}{% endblock %}
+{% block content %}
+{% set locked = event and event.status != 'draft' %}
+<div class="narrow" style="max-width:640px">
+<p class="small"><a href="{{ '/org/events/' ~ event.id if event else '/org' }}">← Назад</a></p>
+<form class="card stack" method="post" style="margin-top:12px">
+  <h1>{{ 'Параметры дегустации' if event else 'Новая дегустация' }}</h1>
+  <div class="field"><label for="title">Название</label>
+    <input id="title" type="text" name="title" value="{{ form.title or '' }}" maxlength="120" required
+           placeholder="Например: Красные вина Крыма"></div>
+  <div class="fields-2">
+    <div><label for="starts_at">Дата и время</label>
+      <input id="starts_at" type="datetime-local" name="starts_at" value="{{ form.starts_at or '' }}"></div>
+    <div><label for="place">Место</label>
+      <input id="place" type="text" name="place" value="{{ form.place or '' }}" maxlength="120"></div>
+  </div>
+  <div class="field"><label for="description">Описание <span class="hint">увидят гости</span></label>
+    <textarea id="description" name="description" maxlength="600">{{ form.description or '' }}</textarea></div>
+
+  <div><label>Формат</label>
+    <div class="choice">
+      <label><input type="radio" name="mode" value="open" {{ 'checked' if (form.mode or 'open') == 'open' }} {{ 'disabled' if locked }}>
+        <span><b>Открытая</b>Гости видят, какое вино оценивают</span></label>
+      <label><input type="radio" name="mode" value="blind" {{ 'checked' if form.mode == 'blind' }} {{ 'disabled' if locked }}>
+        <span><b>Слепая</b>Образцы под номерами, бутылки раскрываются после голосования</span></label>
+    </div></div>
+
+  <div><label>Как гости входят</label>
+    <div class="choice">
+      <label><input type="radio" name="access" value="link" {{ 'checked' if (form.access or 'link') == 'link' }} {{ 'disabled' if locked }}>
+        <span><b>Общий QR-код</b>Один код на экране; повторные входы с одного устройства отмечаются</span></label>
+      <label><input type="radio" name="access" value="personal" {{ 'checked' if form.access == 'personal' }} {{ 'disabled' if locked }}>
+        <span><b>Одноразовые приглашения</b>У каждого гостя свой код, он срабатывает один раз</span></label>
+    </div></div>
+  {% if locked %}<p class="note">Формат и способ входа после начала голосования не меняются.</p>{% endif %}
+
+  <div class="field" style="max-width:220px"><label for="seats">Число мест <span class="hint">необязательно</span></label>
+    <input id="seats" type="number" name="seats" min="1" max="500" value="{{ form.seats or '' }}"></div>
+
+  <div class="row"><button class="btn btn-primary">{{ 'Сохранить' if event else 'Создать и перейти к винам' }}</button></div>
+</form>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "guest/layout.html" %}
+{% import "_macros.html" as m %}
+{% block content %}
+<div data-poll-url="/t/{{ event.join_code }}/state" data-poll-version="{{ version }}" class="stack">
+  {% if event.status == 'draft' %}
+    <p class="note info">Вы в списке участников. Голосование откроется, когда организатор начнёт дегустацию —
+      страница обновится сама.</p>
+  {% elif event.status == 'voting' %}
+    <div class="stack-sm">
+      <div class="row row-between small"><span>Оценено {{ rated }} из {{ total }}</span>
+        {% if rated == total and total %}<span class="badge ok">всё готово</span>{% endif %}</div>
+      <div class="progress"><i style="width:{{ (rated / total * 100)|round|int if total else 0 }}%"></i></div>
+    </div>
+  {% elif event.status == 'closed' %}
+    <p class="note info">Голосование закрыто. {% if event.mode == 'blind' %}Организатор раскрывает бутылки —
+      названия появятся здесь.{% else %}Итоги появятся здесь после публикации.{% endif %}</p>
+  {% else %}
+    <p class="note info">Итоги опубликованы. <a href="/r/{{ event.public_code }}">Общий рейтинг дегустации</a></p>
+  {% endif %}
+
+  <div>
+  {% set ns = namespace(flight=None) %}
+  {% for i in items %}
+    {% if i.wine.flight and i.wine.flight != ns.flight %}<div class="flight">{{ i.wine.flight }}</div>{% endif %}
+    {% set ns.flight = i.wine.flight %}
+    {% set done = i.ballot and i.ballot.score is not none %}
+    <a class="sample {{ 'done' if done }}" href="/t/{{ event.join_code }}/w/{{ i.wine.id }}">
+      <div class="n">{{ i.wine.position }}</div>
+      <div class="grow">
+        {% if i.visible %}
+          <div class="title" style="font-weight:600">{{ i.wine.title }}</div>
+          <div class="muted small">{{ i.wine.manufacturer }} · {{ i.wine.category|lower }}</div>
+        {% else %}
+          <div class="title" style="font-weight:600">Образец {{ i.wine.position }}</div>
+          <div class="muted small">название откроется после дегустации</div>
+        {% endif %}
+        {% if i.group and i.group.score is not none %}
+          <div class="small" style="margin-top:2px">Общая оценка <b>{{ i.group.score|score }}</b> · {{ i.group.place }} место</div>
+        {% endif %}
+      </div>
+      <div class="my">{% if done %}{{ i.ballot.score|score }}<small>ваша оценка</small>
+        {% elif event.status == 'voting' %}<span class="btn btn-sm btn-primary">Оценить</span>
+        {% else %}<small>без оценки</small>{% endif %}</div>
+    </a>
+  {% else %}
+    <p class="empty">Организатор ещё не добавил вина.</p>
+  {% endfor %}
+  </div>
+</div>
+{% endblock %}

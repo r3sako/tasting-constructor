@@ -1,0 +1,20 @@
+{% extends "org/layout.html" %}
+{% block title %}{{ event.title }}{% endblock %}
+{% block content %}
+<div class="event-head">
+  <div class="row"><span class="badge {{ event.status }}">{{ STATUS[event.status] }}</span>
+    <span class="badge">{{ MODE[event.mode] }} дегустация</span>
+    <span class="badge">{{ ACCESS[event.access] }}</span></div>
+  <h1>{{ event.title }}</h1>
+  <p class="muted small">{% if event.starts_at %}{{ event.starts_at|dt }}{% endif %}{% if event.place %} · {{ event.place }}{% endif %}</p>
+</div>
+<nav class="tabs">
+  <a href="{{ base }}" class="{{ 'active' if tab == 'overview' }}">Обзор</a>
+  <a href="{{ base }}/wines" class="{{ 'active' if tab == 'wines' }}">Вина и программа <span class="count">{{ n_wines }}</span></a>
+  <a href="{{ base }}/scales" class="{{ 'active' if tab == 'scales' }}">Шкалы <span class="count">{{ n_criteria }}</span></a>
+  <a href="{{ base }}/invite" class="{{ 'active' if tab == 'invite' }}">Приглашение</a>
+  <a href="{{ base }}/participants" class="{{ 'active' if tab == 'participants' }}">Участники <span class="count">{{ n_people }}</span>{% if n_review %} <span class="badge warn">{{ n_review }}</span>{% endif %}</a>
+  <a href="{{ base }}/results" class="{{ 'active' if tab == 'results' }}">Итоги</a>
+</nav>
+{% block event_content %}{% endblock %}
+{% endblock %}

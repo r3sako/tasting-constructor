@@ -1,0 +1,73 @@
+{% extends "guest/layout.html" %}
+{% block back %}<a href="/t/{{ event.join_code }}" aria-label="К списку" style="font-size:1.4rem;line-height:1">‹</a>{% endblock %}
+{% block content %}
+{% set wine = item.wine %}
+{% set ballot = item.ballot %}
+{% set voting = event.status == 'voting' %}
+{# пока идёт голосование, форму не перезагружаем: человек может её заполнять #}
+<div data-poll-url="/t/{{ event.join_code }}/state" data-poll-version="{{ version }}" {% if voting %}data-poll-pause="form"{% endif %} class="stack">
+  <div class="card hero-wine">
+    {% if item.visible and wine.image %}<img src="{{ image(wine.image) }}" alt="">
+    {% else %}<div class="ph">{{ wine.position }}</div>{% endif %}
+    <div class="grow">
+      <div class="muted small">Образец {{ wine.position }} из {{ total }}{% if wine.flight %} · {{ wine.flight }}{% endif %}</div>
+      {% if item.visible %}
+        <h1 style="margin:4px 0">{{ wine.title }}</h1>
+        <div class="muted small">{{ wine.manufacturer }} · {{ wine.category|lower }} · {{ wine.region }}</div>
+        {% if wine.url %}<a class="small" href="{{ wine.url }}" target="_blank" rel="noopener">Карточка на «Своё Вино»</a>{% endif %}
+      {% else %}
+        <h1 style="margin:4px 0">Образец {{ wine.position }}</h1>
+        <div class="muted small">Название откроется после дегустации</div>
+      {% endif %}
+    </div>
+  </div>
+  {% if item.visible and wine.comment %}<p class="note info">{{ wine.comment }}</p>{% endif %}
+  {% if item.group and item.group.score is not none %}
+  <div class="card row row-between"><div><b>Общая оценка гостей</b>
+    <div class="muted small">{{ item.group.place }} место · {{ item.group.votes }} {{ plural(item.group.votes, 'оценка', 'оценки', 'оценок') }}</div></div>
+    <div class="score">{{ item.group.score|score }}</div></div>
+  {% endif %}
+
+  {% if voting %}
+  <form method="post" class="stack">
+    {% for c in criteria %}
+    {% set current = ballot['values'].get(c.id) if ballot else None %}
+    <fieldset class="card" style="margin-inline:0">
+      <legend class="hidden">{{ c.name }}</legend>
+      <div class="row row-between"><b>{{ c.name }}</b><span class="muted small">от {{ c.min_value }} до {{ c.max_value }}</span></div>
+      {% if c.hint %}<p class="muted small" style="margin:2px 0 10px">{{ c.hint }}</p>{% else %}<div style="height:10px"></div>{% endif %}
+      {% if c.max_value - c.min_value <= 10 %}
+      <div class="pills">
+        {% for v in range(c.min_value, c.max_value + 1) %}
+        <label class="pill"><input type="radio" name="c_{{ c.id }}" value="{{ v }}" {{ 'checked' if current == v }} required><span>{{ v }}</span></label>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="slider" data-slider>
+        <input type="range" min="{{ c.min_value }}" max="{{ c.max_value }}" step="1"
+               value="{{ current if current is not none else ((c.min_value + c.max_value) // 2) }}" aria-label="{{ c.name }}">
+        <output>{{ current if current is not none else '—' }}</output>
+        <input type="hidden" name="c_{{ c.id }}" value="{{ current if current is not none else '' }}">
+      </div>
+      {% endif %}
+    </fieldset>
+    {% endfor %}
+    <div class="card"><label for="note">Заметка <span class="hint">по желанию, без имени попадёт в итоги</span></label>
+      <textarea id="note" name="note" maxlength="500" placeholder="Что запомнилось: аромат, вкус, с чем бы подали">{{ ballot.note if ballot and ballot.note else '' }}</textarea></div>
+    <div class="sticky-submit"><div class="inner">
+      <button class="btn btn-primary btn-block">{{ 'Обновить оценку' if ballot else 'Сохранить оценку' }}</button></div></div>
+  </form>
+  {% else %}
+  <div class="card stack-sm">
+    <h2>Ваша оценка</h2>
+    {% if ballot and ballot.score is not none %}
+      <div class="row row-between"><span class="muted">Итог по шкале 1–5</span><span class="score">{{ ballot.score|score }}</span></div>
+      {% if criteria|length > 1 %}<div class="crit">{% for c in criteria %}<span>{{ c.name }} <b>{{ ballot['values'][c.id] }}</b> из {{ c.max_value }}</span>{% endfor %}</div>{% endif %}
+      {% if ballot.note %}<p class="small">«{{ ballot.note }}»</p>{% endif %}
+    {% else %}
+      <p class="muted">{{ 'Голосование ещё не открыто.' if event.status == 'draft' else 'Вы не оценили этот образец.' }}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

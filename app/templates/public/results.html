@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Итоги: {{ event.title }}{% endblock %}
+{% block body %}
+<header class="topbar"><div class="inner">{{ m.brand() }}</div></header>
+<main class="container" style="max-width:860px"><div class="stack">
+  <div>
+    <div class="row"><span class="badge wine">Итоги дегустации</span><span class="badge">{{ MODE[event.mode] }}</span></div>
+    <h1 style="margin:8px 0 6px">{{ event.title }}</h1>
+    <p class="muted">{% if event.starts_at %}{{ event.starts_at|dt('%d.%m.%Y') }}{% endif %}{% if event.place %} · {{ event.place }}{% endif %}</p>
+    {% if event.description %}<p style="margin-top:8px">{{ event.description }}</p>{% endif %}
+  </div>
+  <div class="stats">
+    <div class="stat"><b>{{ rows|length }}</b><span>{{ plural(rows|length, 'вино', 'вина', 'вин') }}</span></div>
+    <div class="stat"><b>{{ voters }}</b><span>{{ plural(voters, 'участник', 'участника', 'участников') }}</span></div>
+    <div class="stat"><b>{{ counts.valid }}</b><span>{{ plural(counts.valid, 'оценка', 'оценки', 'оценок') }}</span></div>
+  </div>
+  <section class="card">
+    <ul class="list">
+      {% for r in rows %}
+      <li><div class="result">
+        {{ m.place(r.place) }}
+        <div>
+          <div class="wine">{{ m.thumb(r.wine) }}<div class="grow">{{ m.wine_line(r.wine) }}
+            <div class="sub">{% if event.mode == 'blind' %}в дегустации — образец {{ r.wine.position }} · {% endif %}<a href="{{ r.wine.url }}" target="_blank" rel="noopener">карточка на «Своё Вино»</a></div></div></div>
+          {% if r.score is not none %}<div class="bar"><i style="width:{{ ((r.score - 1) / 4 * 100)|round|int }}%"></i></div>{% endif %}
+          {% if criteria|length > 1 and r.votes %}
+          <div class="crit">{% for c in criteria %}<span>{{ c.name }} <b>{{ r.criteria[c.id]|score(1) }}</b> из {{ c.max_value }}</span>{% endfor %}</div>
+          {% endif %}
+          {% if r.notes %}<details style="margin-top:6px"><summary>Заметки гостей: {{ r.notes|length }}</summary>
+            <ul>{% for n in r.notes %}<li>{{ n }}</li>{% endfor %}</ul></details>{% endif %}
+        </div>
+        <div class="score">{{ r.score|score }}<small>{{ r.votes }} {{ plural(r.votes, 'оценка', 'оценки', 'оценок') }}</small></div>
+      </div></li>
+      {% endfor %}
+    </ul>
+  </section>
+  <p class="small muted">Оценка каждого гостя приведена к шкале 1–5 Народного винного рейтинга; в расчёт идут только
+    валидные оценки. Данные о винах — из каталога «Своё Вино».</p>
+  <p class="disclaimer">18+. Чрезмерное употребление алкоголя вредит вашему здоровью.</p>
+</div></main>
+{% endblock %}

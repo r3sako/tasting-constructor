@@ -1,0 +1,82 @@
+{% extends "org/event_layout.html" %}
+{% block event_content %}
+{% set order = ['draft', 'voting', 'closed', 'published'] %}
+{% set at = order.index(event.status) %}
+{% set labels = ['Подготовка', 'Голосование', 'Раскрытие бутылок' if event.mode == 'blind' else 'Подведение итогов', 'Публикация'] %}
+<ol class="stepper" style="margin-bottom:20px">
+  {% for label in labels %}
+  <li class="{{ 'done' if loop.index0 < at else ('now' if loop.index0 == at else '') }}">{{ loop.index }}. {{ label }}</li>
+  {% endfor %}
+</ol>
+
+<div class="grid-2">
+  <section class="card stack">
+    {% if event.status == 'draft' %}
+      <h2>Подготовка</h2>
+      <ul class="checklist">
+        <li class="{{ 'done' if n_wines }}"><a href="{{ base }}/wines">Вина в программе</a>: {{ n_wines }}</li>
+        <li class="{{ 'done' if n_criteria }}"><a href="{{ base }}/scales">Шкалы оценки</a>: {{ n_criteria }}</li>
+        <li class="done"><a href="{{ base }}/invite">QR-код для гостей</a> готов</li>
+      </ul>
+      <p class="muted small">После старта состав вин и шкалы зафиксируются: гости должны оценивать одно и то же.</p>
+      <form method="post" action="{{ base }}/status">
+        <button class="btn btn-primary" name="action" value="start" {{ 'disabled' if not (n_wines and n_criteria) }}>Открыть голосование</button>
+      </form>
+    {% elif event.status == 'voting' %}
+      <h2>Идёт голосование</h2>
+      <div class="stats">
+        <div class="stat"><b>{{ n_people }}</b><span>{{ plural(n_people, 'участник', 'участника', 'участников') }}</span></div>
+        <div class="stat"><b>{{ n_ratings }}</b><span>{{ plural(n_ratings, 'оценка', 'оценки', 'оценок') }}</span></div>
+      </div>
+      {% if n_review %}<p class="note">Требуют проверки: {{ n_review }}. <a href="{{ base }}/participants">Открыть участников</a></p>{% endif %}
+      <div class="row">
+        <a class="btn" href="{{ base }}/screen" target="_blank">Экран для проектора</a>
+        <form method="post" action="{{ base }}/status">
+          <button class="btn btn-primary" name="action" value="close" data-confirm="Закрыть голосование? Гости больше не смогут менять оценки.">Закрыть голосование</button>
+        </form>
+        {% if not n_ratings %}
+        <form method="post" action="{{ base }}/status"><button class="btn btn-ghost" name="action" value="to_draft">Вернуть в черновик</button></form>
+        {% endif %}
+      </div>
+    {% elif event.status == 'closed' %}
+      <h2>Голосование закрыто</h2>
+      {% if event.mode == 'blind' and unrevealed %}
+        <p>Осталось раскрыть бутылок: <b>{{ unrevealed }}</b>. Откройте экран и раскрывайте образцы по одному —
+          от последнего места к первому.</p>
+        <div class="row"><a class="btn btn-primary" href="{{ base }}/screen" target="_blank">Начать раскрытие на экране</a>
+          <a class="btn" href="{{ base }}/results">Итоги</a></div>
+      {% else %}
+        <p>Проверьте итоги и опубликуйте их — гости увидят общий результат на своих телефонах.</p>
+        <div class="row"><a class="btn" href="{{ base }}/results">Посмотреть итоги</a></div>
+      {% endif %}
+      <div class="row">
+        <form method="post" action="{{ base }}/status"><button class="btn {{ 'btn-primary' if not (event.mode == 'blind' and unrevealed) }}" name="action" value="publish"
+          {% if event.mode == 'blind' and unrevealed %}data-confirm="Нераскрытые бутылки откроются сразу. Опубликовать?"{% endif %}>Опубликовать итоги</button></form>
+        <form method="post" action="{{ base }}/status"><button class="btn btn-ghost" name="action" value="reopen">Возобновить голосование</button></form>
+      </div>
+    {% else %}
+      <h2>Итоги опубликованы</h2>
+      <div class="link-box"><input id="results-url" type="text" readonly value="{{ results_url }}">
+        <button class="btn" type="button" data-copy="#results-url">Скопировать</button></div>
+      <div class="row"><a class="btn btn-primary" href="{{ results_url }}" target="_blank">Открыть страницу итогов</a>
+        <a class="btn" href="{{ base }}/results">Передача в рейтинг</a>
+        <form method="post" action="{{ base }}/status"><button class="btn btn-ghost" name="action" value="unpublish">Снять с публикации</button></form></div>
+    {% endif %}
+  </section>
+
+  <section class="card stack">
+    <div class="row row-between"><h2>Параметры</h2><a class="btn btn-sm" href="{{ base }}/edit">Изменить</a></div>
+    <table>
+      <tr><td class="muted">Формат</td><td>{{ MODE[event.mode] }}</td></tr>
+      <tr><td class="muted">Вход гостей</td><td>{{ ACCESS[event.access] }}</td></tr>
+      <tr><td class="muted">Мест</td><td>{{ event.seats or 'без ограничения' }}</td></tr>
+      <tr><td class="muted">Когда</td><td>{{ event.starts_at|dt or '—' }}</td></tr>
+      <tr><td class="muted">Где</td><td>{{ event.place or '—' }}</td></tr>
+    </table>
+    {% if event.description %}<p class="small">{{ event.description }}</p>{% endif %}
+    <form method="post" action="{{ base }}/delete">
+      <button class="btn btn-sm btn-danger btn-ghost" data-confirm="Удалить дегустацию вместе с оценками? Это нельзя отменить.">Удалить дегустацию</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

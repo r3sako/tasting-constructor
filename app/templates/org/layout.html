@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block body %}
+<header class="topbar"><div class="inner">{{ m.brand() }}
+  <div class="who"><a href="/org" style="color:#fff">Мои дегустации</a><span>{{ org.name }}</span>
+    <form method="post" action="/logout"><button class="btn btn-sm">Выйти</button></form></div></div></header>
+<main class="container">
+  {{ m.flashes(flashes) }}
+  {% block content %}{% endblock %}
+</main>
+{% endblock %}

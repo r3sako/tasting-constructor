@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block body %}
+<header class="topbar"><div class="inner">{{ m.brand() }}
+  <div class="who"><a class="btn btn-sm" href="/login">Войти</a></div></div></header>
+<main class="landing stack">
+  {{ m.flashes(flashes) }}
+  <div>
+    <h1>Дегустация, которую гости оценивают со смартфона</h1>
+    <p class="lead">Соберите программу из каталога российских вин «Своё Вино», покажите QR-код — и получите итоги,
+      готовые к передаче в Народный винный рейтинг.</p>
+  </div>
+  <div class="row">
+    <a class="btn btn-primary" href="/register">Создать кабинет организатора</a>
+    {% if demo %}
+    <form method="post" action="/login/demo"><button class="btn">Посмотреть демо-кабинет</button></form>
+    {% endif %}
+  </div>
+  <ol class="steps">
+    <li><b>Соберите программу</b><span class="muted small">Вина из каталога, сеты, порядок подачи, открытый или слепой формат.</span></li>
+    <li><b>Настройте шкалы</b><span class="muted small">Одна оценка или несколько критериев со своими весами.</span></li>
+    <li><b>Пригласите по QR</b><span class="muted small">Общий код на экране или одноразовые личные приглашения.</span></li>
+    <li><b>Раскройте и опубликуйте</b><span class="muted small">Бутылки открываются по одной, валидные оценки уходят в рейтинг.</span></li>
+  </ol>
+  <p class="disclaimer">18+. Чрезмерное употребление алкоголя вредит вашему здоровью.</p>
+</main>
+{% endblock %}

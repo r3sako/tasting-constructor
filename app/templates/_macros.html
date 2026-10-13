@@ -1,0 +1,20 @@
+{% macro flashes(items) %}
+  {% for kind, text in items %}<div class="flash {{ kind }}" role="status">{{ text }}</div>{% endfor %}
+{% endmacro %}
+
+{% macro thumb(wine, label=None) %}
+  {% if wine.image and not label %}
+    <img class="thumb" src="{{ image(wine.image) }}" alt="">
+  {% else %}
+    <div class="thumb blank">{{ label or '' }}</div>
+  {% endif %}
+{% endmacro %}
+
+{% macro wine_line(wine) %}
+  <div class="title">{{ wine.title or wine.wine_slug }}</div>
+  <div class="sub">{{ wine.manufacturer }}{% if wine.category %} · {{ wine.category|lower }}{% endif %}{% if wine.region %} · {{ wine.region }}{% endif %}</div>
+{% endmacro %}
+
+{% macro place(n) %}<div class="place {{ 'p' ~ n if n and n <= 3 else '' }}">{{ n or '—' }}</div>{% endmacro %}
+
+{% macro brand() %}<a class="brand" href="/">Конструктор дегустаций<small>прототип для платформы «Своё Вино»</small></a>{% endmacro %}

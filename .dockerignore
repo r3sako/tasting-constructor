@@ -1,0 +1,10 @@
+.venv
+.git
+.claude
+__pycache__
+.pytest_cache
+tests
+data/raw
+data/app.sqlite*
+data/.secret_key
+data/*.jsonl

@@ -1,0 +1,33 @@
+{% extends "guest/layout.html" %}
+{% block content %}
+{% if event.status in ('closed', 'published') %}
+<div class="card stack">
+  <h1>Дегустация завершена</h1>
+  <p>Голосование закрыто, присоединиться уже нельзя.</p>
+  {% if event.status == 'published' %}<p><a class="btn btn-primary btn-block" href="/r/{{ event.public_code }}">Посмотреть итоги</a></p>{% endif %}
+</div>
+{% else %}
+<form class="card stack" method="post">
+  <div>
+    <h1>Добро пожаловать</h1>
+    <p class="muted" style="margin-top:6px">
+      {% if event.starts_at %}{{ event.starts_at|dt }}{% endif %}{% if event.place %} · {{ event.place }}{% endif %}</p>
+    {% if event.description %}<p style="margin-top:10px">{{ event.description }}</p>{% endif %}
+  </div>
+  {% if event.mode == 'blind' %}
+  <p class="note info">Дегустация слепая: вы оцениваете образцы под номерами, а названия узнаете в конце.</p>
+  {% endif %}
+  <div class="field"><label for="name">Как вас зовут <span class="hint">увидит только организатор</span></label>
+    <input id="name" type="text" name="name" value="{{ name }}" maxlength="40" autocomplete="given-name" required></div>
+  {% if event.access == 'personal' %}
+  <div class="field"><label for="invite">Код приглашения</label>
+    <input id="invite" type="text" name="invite" value="{{ invite }}" autocapitalize="none" autocomplete="off" required></div>
+  {% endif %}
+  <label class="check"><input type="checkbox" name="adult" value="yes" required>
+    <span>Мне исполнилось 18 лет</span></label>
+  <input type="hidden" name="fp">
+  <button class="btn btn-primary btn-block">Войти в дегустацию</button>
+  <p class="disclaimer" style="margin-top:0">Чрезмерное употребление алкоголя вредит вашему здоровью</p>
+</form>
+{% endif %}
+{% endblock %}
