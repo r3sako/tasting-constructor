@@ -2,8 +2,22 @@
 {% import "_macros.html" as m %}
 {% block body %}
 <header class="topbar"><div class="inner">{{ m.brand() }}
-  <div class="who"><a href="/org" style="color:#fff">Мои дегустации</a><span>{{ org.name }}</span>
-    <form method="post" action="/logout"><button class="btn btn-sm">Выйти</button></form></div></div></header>
+  {# на широком экране — строка навигации, на телефоне — выпадающее меню #}
+  <nav class="who" aria-label="Кабинет">
+    <a class="nav-link" href="/org">Мои дегустации</a>
+    <span class="org-name">{{ org.name }}</span>
+    <form method="post" action="/logout"><button class="btn btn-sm">Выйти</button></form>
+  </nav>
+  <details class="menu">
+    <summary aria-label="Меню"><span class="burger"></span></summary>
+    <div class="menu-panel">
+      <div class="menu-org">Кабинет организатора<b>{{ org.name }}</b></div>
+      <a href="/org">Мои дегустации</a>
+      <a href="/org/events/new">Новая дегустация</a>
+      <form method="post" action="/logout"><button class="btn btn-block">Выйти</button></form>
+    </div>
+  </details>
+</div></header>
 <main class="container">
   {{ m.flashes(flashes) }}
   {% block content %}{% endblock %}

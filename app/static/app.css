@@ -49,7 +49,36 @@ img { max-width: 100%; display: block; }
 .topbar .inner { max-width: 1180px; margin: 0 auto; padding: 12px 20px; display: flex; gap: 16px; align-items: center; }
 .brand { color: #fff; text-decoration: none; font-weight: 650; font-size: 1.05rem; }
 .brand small { display: block; font-weight: 400; font-size: .75rem; opacity: .7; }
-.topbar .who { margin-left: auto; display: flex; gap: 12px; align-items: center; font-size: .9rem; opacity: .95; }
+.topbar .who { margin-left: auto; display: flex; gap: 6px; align-items: center; font-size: .9rem; }
+.who .nav-link { color: rgba(255, 255, 255, .88); text-decoration: none; font-weight: 550; padding: 7px 12px; border-radius: 8px; }
+.who .nav-link:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+.who .org-name { color: rgba(255, 255, 255, .6); padding: 0 14px; margin-right: 4px; border-left: 1px solid rgba(255, 255, 255, .2); }
+
+/* меню для телефона: <details> открывается без скриптов */
+.menu { display: none; margin-left: auto; position: relative; }
+.menu summary {
+  list-style: none; width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; cursor: pointer;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .18) 0%, rgba(255, 255, 255, .06) 100%);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, .28) inset, 0 0 0 .5px rgba(255, 255, 255, .32), 0 2px 8px rgba(20, 2, 8, .25);
+}
+.menu summary::-webkit-details-marker { display: none; }
+.burger, .burger::before, .burger::after { display: block; width: 18px; height: 2px; border-radius: 1px; background: #fff; transition: transform .2s, opacity .2s; }
+.burger { position: relative; }
+.burger::before, .burger::after { content: ""; position: absolute; left: 0; }
+.burger::before { top: -6px; }
+.burger::after { top: 6px; }
+.menu[open] .burger { background: transparent; }
+.menu[open] .burger::before { transform: translateY(6px) rotate(45deg); }
+.menu[open] .burger::after { transform: translateY(-6px) rotate(-45deg); }
+.menu-panel {
+  position: absolute; right: 0; top: calc(100% + 10px); z-index: 20; width: min(290px, calc(100vw - 32px));
+  background: #fff; color: var(--ink); border-radius: 16px; padding: 8px; box-shadow: 0 12px 32px rgba(40, 10, 20, .22), 0 0 0 .5px rgba(60, 20, 30, .15);
+}
+.menu-org { padding: 10px 12px 14px; margin-bottom: 6px; border-bottom: 1px solid var(--line); font-size: .8rem; color: var(--muted); }
+.menu-org b { display: block; margin-top: 2px; font-size: 1rem; color: var(--ink); }
+.menu-panel a { display: block; padding: 12px; border-radius: 10px; color: var(--ink); text-decoration: none; font-weight: 550; }
+.menu-panel a:hover { background: var(--bg); }
+.menu-panel form { padding: 8px 4px 4px; }
 .container { max-width: 1180px; margin: 0 auto; padding: 24px 20px 64px; }
 .narrow { max-width: 460px; margin: 0 auto; }
 
@@ -61,25 +90,68 @@ img { max-width: 100%; display: block; }
 .split { display: grid; gap: 20px; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start; }
 
 /* ---------- кнопки и формы ---------- */
+/* Кнопки в стиле bevel: вертикальный градиент даёт объём, блик сверху (inner highlight) — свет на кромке,
+   тень снизу — нижнюю грань, контур в полпикселя — границу без обводки. При нажатии всё переворачивается. */
 .btn {
+  --face: linear-gradient(180deg, #ffffff 0%, #f6efe9 100%);
+  --face-pressed: linear-gradient(180deg, #efe5dc 0%, #f7f1eb 100%);
+  --edge: rgba(60, 20, 30, .22);
+  --glow: 0 1px 2px rgba(60, 20, 30, .08);
+  --highlight: #ffffff;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 42px; padding: 0 18px; border-radius: 10px; border: 1px solid var(--line);
-  background: var(--surface); color: var(--ink); font: inherit; font-weight: 550;
+  min-height: 42px; padding: 0 18px; border-radius: 12px; border: 0;
+  background: var(--face); color: var(--ink); font: inherit; font-weight: 550;
   text-decoration: none; cursor: pointer; white-space: nowrap;
+  box-shadow:
+    0 1px 0 0 var(--highlight) inset,
+    0 -1px 0 0 rgba(9, 9, 9, .07) inset,
+    0 0 0 .5px var(--edge),
+    var(--glow);
+  transition: filter .15s, box-shadow .15s, transform .05s;
 }
-.btn:hover { border-color: #cbb9ad; }
+.btn:hover { filter: brightness(1.03); }
+.btn:active:not([disabled]) {
+  background: var(--face-pressed);
+  box-shadow:
+    0 1px 2px 0 rgba(9, 9, 9, .14) inset,
+    0 0 0 .5px var(--edge);
+  transform: translateY(.5px);
+}
 .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .pill input:focus-visible + span {
   outline: 3px solid rgba(123, 30, 58, .3); outline-offset: 1px;
 }
-.btn-primary { background: var(--wine); border-color: var(--wine); color: #fff; }
-.btn-primary:hover { background: var(--wine-dark); border-color: var(--wine-dark); }
+.btn-primary {
+  --face: linear-gradient(180deg, #b6405f 0%, #8d2444 48%, #6c1832 100%);
+  --face-pressed: linear-gradient(180deg, #5e1329 0%, #74203a 100%);
+  --edge: rgba(70, 10, 28, .85);
+  --glow: 0 4px 14px rgba(140, 32, 62, .38);
+  --highlight: rgba(255, 255, 255, .42);
+  color: #fff; text-shadow: 0 -1px 0 rgba(60, 8, 24, .35);
+}
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:active:not([disabled]) {
+  box-shadow:
+    0 1px 3px 0 rgba(30, 4, 12, .45) inset,
+    0 0 0 .5px var(--edge),
+    0 2px 6px rgba(123, 30, 58, .22);
+}
 .btn-danger { color: var(--danger); }
-.btn-ghost { background: transparent; }
+.btn-ghost { --face: transparent; --face-pressed: var(--wine-soft); box-shadow: none; }
+.btn-ghost:hover { background: rgba(123, 30, 58, .06); filter: none; }
+.btn-ghost:active:not([disabled]) { box-shadow: none; }
 .btn-sm { min-height: 34px; padding: 0 12px; font-size: .875rem; border-radius: 8px; }
 .btn-icon { min-height: 34px; width: 34px; padding: 0; border-radius: 8px; }
 .btn-block { width: 100%; }
-.btn[disabled] { opacity: .45; cursor: not-allowed; }
-.topbar .btn { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .3); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; filter: none; --glow: 0 0 0 transparent; }
+/* на тёмной шапке и экране проектора — полупрозрачное стекло с тем же бликом */
+.topbar .btn, .scr .btn {
+  --face: linear-gradient(180deg, rgba(255, 255, 255, .18) 0%, rgba(255, 255, 255, .06) 100%);
+  --face-pressed: linear-gradient(180deg, rgba(0, 0, 0, .12) 0%, rgba(255, 255, 255, .04) 100%);
+  --edge: rgba(255, 255, 255, .32);
+  --glow: 0 2px 8px rgba(20, 2, 8, .25);
+  --highlight: rgba(255, 255, 255, .28);
+  color: #fff;
+}
 
 label { display: block; font-weight: 550; font-size: .9rem; margin-bottom: 6px; }
 .hint { font-weight: 400; color: var(--muted); font-size: .85rem; }
@@ -92,6 +164,11 @@ textarea { min-height: 84px; resize: vertical; }
 .fields-2 { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; margin: 0; }
 .check input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--wine); flex: none; }
+/* подтверждение возраста — отдельная плашка, чтобы не слипалась с полем имени */
+.consent { align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fbf7f3; cursor: pointer; }
+.stack > .consent { margin-top: 20px; }
+.consent input { width: 22px; height: 22px; margin-top: 0; }
+.consent:has(input:checked) { border-color: rgba(123, 30, 58, .4); background: var(--wine-soft); }
 
 .choice { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .choice label { margin: 0; cursor: pointer; }
@@ -201,7 +278,11 @@ body.guest { background: var(--bg); }
 .pill { margin: 0; position: relative; }
 .pill input { position: absolute; opacity: 0; inset: 0; }
 .pill span { display: grid; place-items: center; min-height: 48px; border: 1px solid #d9cabf; border-radius: 10px; background: #fff; font-weight: 650; cursor: pointer; }
-.pill input:checked + span { background: var(--wine); border-color: var(--wine); color: #fff; }
+.pill input:checked + span {
+  background: linear-gradient(180deg, #b6405f 0%, #8d2444 48%, #6c1832 100%); border-color: transparent; color: #fff;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, .42) inset, 0 -1px 0 0 rgba(9, 9, 9, .07) inset,
+              0 0 0 .5px rgba(70, 10, 28, .9), 0 3px 10px rgba(123, 30, 58, .28);
+}
 .slider { display: grid; grid-template-columns: minmax(0, 1fr) 56px; gap: 12px; align-items: center; }
 .slider input[type=range] { width: 100%; accent-color: var(--wine); height: 32px; }
 .slider output { font-size: 1.4rem; font-weight: 700; text-align: right; color: var(--wine); }
@@ -232,8 +313,22 @@ body.screen { background: radial-gradient(circle at 20% 0%, #7b1e3a, #2b0a15 70%
 .scr-latest { background: #fff; color: var(--ink); border-radius: 24px; padding: 3vh 3vw; display: flex; gap: 3vw; align-items: center; }
 .scr-latest img { height: 26vh; width: auto; border-radius: 12px; }
 .scr-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.scr .btn { background: rgba(255, 255, 255, .12); color: #fff; border-color: rgba(255, 255, 255, .3); }
-.scr .btn-primary { background: #fff; color: var(--wine-dark); border-color: #fff; }
+.topbar .menu-panel .btn {
+  --face: linear-gradient(180deg, #ffffff 0%, #f6efe9 100%);
+  --face-pressed: linear-gradient(180deg, #efe5dc 0%, #f7f1eb 100%);
+  --edge: rgba(60, 20, 30, .22);
+  --glow: 0 1px 2px rgba(60, 20, 30, .08);
+  --highlight: #ffffff;
+  color: var(--danger);
+}
+.scr .btn-primary {
+  --face: linear-gradient(180deg, #ffffff 0%, #f3e6e0 100%);
+  --face-pressed: linear-gradient(180deg, #e9d9d1 0%, #f6ece7 100%);
+  --edge: rgba(255, 255, 255, .6);
+  --glow: 0 4px 14px rgba(255, 220, 230, .22);
+  --highlight: #ffffff;
+  color: var(--wine-dark); text-shadow: none;
+}
 
 /* ---------- главная ---------- */
 .landing { max-width: 900px; margin: 0 auto; padding: 56px 20px; }
@@ -259,6 +354,12 @@ body.screen { background: radial-gradient(circle at 20% 0%, #7b1e3a, #2b0a15 70%
 
 @media (max-width: 1000px) {
   .split { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .topbar .who { display: none; }
+  .menu { display: block; }
+  .brand small { display: none; }
+  .brand { white-space: nowrap; }
 }
 @media (max-width: 860px) {
   .grid-2, .grid-3, .fields-2 { grid-template-columns: minmax(0, 1fr); }

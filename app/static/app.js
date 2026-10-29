@@ -74,3 +74,10 @@ if (addCriterion) {
     document.querySelector("#criteria-body").appendChild(template.content.cloneNode(true));
   });
 }
+
+// Меню в шапке закрывается по нажатию мимо него
+document.addEventListener("click", (e) => {
+  document.querySelectorAll("details.menu[open]").forEach((menu) => {
+    if (!menu.contains(e.target)) menu.removeAttribute("open");
+  });
+});
