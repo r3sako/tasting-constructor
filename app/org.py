@@ -22,7 +22,8 @@ FILTERS = ("q", "color", "sweetness", "region", "grape", "rated")
 
 
 def qr_svg(url: str, scale: int = 6) -> str:
-    return segno.make(url, error="m").svg_inline(scale=scale, dark="#3b0f1d", light="#ffffff", border=2)
+    # omitsize: вместо фиксированных width/height — viewBox, чтобы код растягивался вместе с рамкой
+    return segno.make(url, error="m").svg_inline(scale=scale, dark="#3b0f1d", light="#ffffff", border=2, omitsize=True)
 
 
 def event_context(db, event) -> dict:
